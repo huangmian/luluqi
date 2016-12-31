@@ -21,7 +21,7 @@
 
 然后，运行 `composer install --prefer-dist` 安装yii2核心文件
 
-注：上面的步骤可以换成直接下载[百度云压缩包](http://pan.baidu.com/s/1miAZr8c)，密码 i1xt
+注：上面的步骤可以换成直接下载[百度云压缩包](https://pan.baidu.com/s/1miAZr8c)，密码 i1xt
 
 （2）、创建数据库 `luluqi`
 
