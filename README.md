@@ -34,7 +34,7 @@
 ① nginx：打开 nginx/conf/vhosts.conf，在文件的末尾追加以下代码
 
 注意：root 为 luluqi/web 所在文件路径
-
+```
 server {
         listen       80;
         server_name  www.luluqi.com ;
@@ -55,10 +55,11 @@ server {
             include        fastcgi_params;
         }
 }
+```
 ② apache：打开 apache/conf/vhosts.conf，在文件的末尾追加以下代码
 
 注意：DocumentRoot 为 luluqi/web 所在文件路径
-
+```
 <VirtualHost *:80>
     DocumentRoot "D:\Program Files\phpStudy\WWW\luluqi\web"
     ServerName www.luluqi.com
@@ -71,6 +72,7 @@ server {
       Require all granted
   </Directory>
 </VirtualHost>
+```
 （4）、配置 hosts 文件
 
 打开 hosts 文件，添加一下代码：
