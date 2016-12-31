@@ -1,25 +1,36 @@
 html,
 body {
     height: 100%;
-	background-color: #EBEBEB;
+	background-color: #ffffff;
 }
 
 .wrap {
     min-height: 100%;
     height: auto;
     margin: 0 auto -60px;
-    padding: 0 0 60px;
+    padding: 0 0 50px;
 }
 
 .wrap > .container {
-    padding: 70px 15px 20px;
+    padding: 65px 15px 20px;
 }
 
 .footer {
     height: 60px;
-    background-color: #f5f5f5;
-    border-top: 1px solid #ddd;
-    padding-top: 10px;
+	background: #2e2e2e url(footerBg.png) repeat;
+}
+
+.friendly-link {
+    height: 44px;
+    line-height: 54px;
+    color: #808080;
+    text-align: center;
+    overflow: hidden;
+}
+
+.friendly-link a {
+    color: #9D9D9D;
+    margin: 0 10px;
 }
 
 .jumbotron {
@@ -37,7 +48,6 @@ body {
     font-style: italic;
 }
 
-/* add sorting icons to gridview sort links */
 a.asc:after, a.desc:after {
     position: relative;
     top: 1px;
@@ -93,14 +103,13 @@ a.desc:after {
 
 .badge {
     display: inline-block;
-    min-width: 10px;
-    padding: 3px 7px;
+    min-width: 20px;
+    padding: 3px 2px;
     font-size: 12px;
     font-weight: bold;
     line-height: 1;
     color: #fff;
     text-align: center;
-    white-space: nowrap;
     vertical-align: middle;
     background-color: #777;
     border-radius: 10px;
@@ -111,23 +120,146 @@ a.desc:after {
 }
 
 .action{
-    border-bottom: #eee solid 1px;
+    /* border-bottom: #eee solid 1px; */
     padding-bottom: 10px;
     margin-bottom: 20px;
+}
+
+.grey{
     color: #999;
 }
 
-span{
-	margin-right: 15px;
+.top {
+    font-size: 12px;
+    background: #f5f5f5 none repeat scroll 0 0;
+    border: 1px solid rgba(119, 119, 119, 0.29);
+    color: rgba(119, 119, 119, 0.97);
+    border-radius: 19px;
+    margin-left: 4px;
+    padding: 0px 9px;
 }
 
-.active {
-    color: #eea236;
+.reprint {
+    font-size: 12px;
+    background: #0A7C0A none repeat scroll 0 0;
+    border: 1px solid #5bc0de;
+    color: #fff;
+    margin-left: 4px;
+    padding: 2px 7px;
 }
 
-.sidebar {
-    position: absolute;
-    width: 250px;
-    margin-top: 100px;
-    margin-left: 80px;
+.dot {
+    margin: 0 10px;
+}
+
+.lu-label {
+    clear: both;
+    float: left;
+    display: block;
+    width: 120px;
+    color: rgb(153, 153, 153);
+    text-align: right;
+}
+
+.lu-info {
+    float: left;
+    margin-left: -5px;
+}
+
+#back-to-top {
+    position: fixed;
+    right: 10px;
+    bottom: 41px;
+    background: rgba(230, 126, 34, 0.6);
+    color: #ffffff;
+    text-align: center;
+    border-radius: 2px;
+    z-index: 1;
+    display: none;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+}
+
+.back-to-top {
+    padding: 16px 7px;
+}
+
+.support-author {
+    padding: 25px;
+    margin-bottom: 0px;
+    border-left: 4px solid #f57e42;
+    box-sizing: border-box;
+    clear: both;
+    margin-top: 10px;
+}
+
+.btn-pay {
+    border-color: #f57e42;
+    background: #f57e42;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-red {
+    color: red;
+}
+
+.fa.fa-diamond, .fa.fa-rss, .fa.fa-newspaper-o, .fa.fa-hand-o-left{
+    color: #f0ad4e;
+}
+
+.tag-list li {
+    line-height: 2em;
+    margin: 0 3px;
+}
+
+.auth-client {
+	list-style: none;
+	float: left;
+}
+
+/* Yii给必填项加星 */
+div.required label:after {
+    content: " *";
+    color: red;
+}
+
+.navbar {
+    background-color: #222831;
+}
+
+.navbar-inverse .navbar-brand{
+    color: #00adb5;
+}
+
+.navbar-inverse .navbar-nav > li > a {
+    color: #fff;
+}
+
+a:hover {
+	text-decoration: none;
+	background: #D66C15;
+}
+
+.panel {
+    margin-bottom: 10px;
+	border: 0px solid transparent;
+}
+.panel-heading {
+    border-bottom: 0px solid transparent;
+}
+.panel-default {
+    border-color: #ffffff;
+}
+.panel-body {
+    padding: 0px;
+}
+ul {
+    margin-top: 8px;
+}
+.form-group {
+    margin-top: 12px;
 }

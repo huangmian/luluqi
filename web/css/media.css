@@ -9,7 +9,7 @@
 .media-body {
   zoom: 1;
   overflow: hidden;
-  border-bottom: #eee solid 1px;
+  /* border-bottom: #eee solid 1px; */
 }
 
 .media-body {
@@ -19,7 +19,7 @@
 .media-list {
   padding-left: 0;
   list-style: none;
-	border-bottom: #eee solid 1px;
+  /* border-bottom: #eee solid 1px; */
 }
 
 .media-action {
@@ -45,6 +45,24 @@
   vertical-align: top;
 }
 
+.media-list .media-right .btn-default h4 {
+    font-size: 12px;
+    margin: 0;
+    line-height: 20px;
+    background: #ddd;
+}
+
+.media-list .media-right .btn-default {
+    width: 45px;
+    height: 48px;
+    padding: 0;
+    line-height: 26px;
+    font-weight: 500;
+    color: #999;
+    display: block;
+    text-align: center;
+}
+
 .media-middle {
   vertical-align: middle;
 }
@@ -56,6 +74,8 @@
 .media-heading {
   margin-top: 0;
   margin-bottom: 5px;
+  color: #999;
+  font-size: 12px;
 }
 
 .media-object {
@@ -63,4 +83,10 @@
   &.img-thumbnail {
     max-width: none;
   }
+}
+
+.list-group-item {
+    border: none;
+    margin-bottom: 0;
+    border-bottom: 1px solid #ddd;
 }
