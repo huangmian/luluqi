@@ -1,11 +1,12 @@
 <?php
 namespace modules\user\controllers;
+
 use Yii;
 use yii\helpers\Json;
 use modules\user\models\UserInfo;
-use modules\user\models\UserInfoSearch;
-use app\controllers\BackController;
+use modules\user\models\search\UserInfoSearch;
 use yii\web\NotFoundHttpException;
+use app\controllers\BackController;
 
 class UserInfoController extends BackController
 {

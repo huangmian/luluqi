@@ -7,4 +7,5 @@ $this->title = $name;
     <h1><?= Html::encode($this->title) ?></h1>
     <!-- nl2br() 函数在字符串中的每个新行（\n）之前插入 HTML 换行符（<br> 或 <br />） -->
     <div class="alert alert-danger"><?= nl2br(Html::encode($message)) ?></div>
+    <?= Html::img(Yii::$app->params['imageDomain'].'/other/404.png',['class'=>"img-responsive"])?>
 </section>

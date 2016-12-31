@@ -1,17 +1,13 @@
 <?php
 use yii\bootstrap\ActiveForm;
 use yii\helpers\Html;
-$this->title = '修改密码';
+$this->title = Yii::t('user', 'Modify Password');
 ?>
 <div class='row'>
-    <div class='col-md-3'>
-        <?= $this->render('/default/nav')?>
-    </div>
+    <div class='col-md-3'><?= $this->render('/default/navLeft')?></div>
     <div class='col-md-6'>
         <div class='panel panel-default'>
-            <div class='panel-heading'>
-                <h3 class='panel-title'><?=Html::encode($this->title)?></h3>
-            </div>
+            <?=$this->render('navRight')?>
             <div class='panel-body'>
                 <?php $form = ActiveForm::begin(['id'=>'modifyPasswordForm']);?>
                     <?=$form->field($model,'old_password')->passwordInput()?>

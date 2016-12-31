@@ -2,11 +2,11 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 $this->title = $model->user_id;
-$this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'User Infos'), 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => Yii::t('user', 'UserInfo').Yii::t('common', 'Manager'), 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="user-info-view">
-    <p><?= Html::a(Yii::t('user', 'Update'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
+    <p><?= Html::a(Yii::t('common', 'Update'), ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?></p>
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
@@ -14,8 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
             'score',
             'signature',
             ['attribute' => 'sex',
-                'value' => $model->getSex($model->sex),
-            ],
+                'value' => $model->sexName],
             'qq',
             'birthday',
             'location',

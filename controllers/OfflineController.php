@@ -1,13 +1,10 @@
 <?php
 namespace app\controllers;
 
-use app\controllers\FrontController;
-
-class OfflineController extends FrontController
+class OfflineController extends \app\controllers\FrontController
 {    
     public function actionIndex($param1,$param2)
     {
         return $this->render('index',['param1'=>$param1,'param2'=>$param2]);
     }
 }
-?>

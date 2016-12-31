@@ -1,10 +1,11 @@
 <?php
 namespace modules\user\controllers;
+
 use Yii;
 use modules\user\models\User;
-use modules\user\models\UserSearch;
-use app\controllers\BackController;
+use modules\user\models\search\UserSearch;
 use yii\web\NotFoundHttpException;
+use app\controllers\BackController;
 
 class UserController extends BackController
 {
@@ -27,7 +28,7 @@ class UserController extends BackController
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             //renderAjax只显示view，以ajax方式渲染页面，可以配合js/css实现各种特效
-            return $this->renderAjax('create', ['model' => $model,]);
+            return $this->renderAjax('create', ['model' => $model]);
         }
     }
 
@@ -46,7 +47,7 @@ class UserController extends BackController
         $this->findModel($id)->delete();
         return $this->redirect(['index']);
     }
-
+    
     protected function findModel($id)
     {
         if (($model = User::findOne($id)) !== null) {

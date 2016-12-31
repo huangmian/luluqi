@@ -1,10 +1,11 @@
 <?php
 use yii\bootstrap\ActiveForm;
 use yii\helpers\Html;
-$this->title = '登录';
+use lulubin\oauth\assets\AuthChoiceAsset;
+AuthChoiceAsset::register($this);
+$this->title = Yii::t('user', 'Login');
 ?>
 <!-- 缓存Get请求的div -->
-<?php if ($this->beginCache('login',['enabled'=>Yii::$app->request->isGet])){?>
 <div id='login' class='row'>
 	<div class='col-md-4 col-md-offset-4'>
 		<div class='panel panel-default'>
@@ -18,10 +19,14 @@ $this->title = '登录';
                     <?=$form->field($model,'rememberMe')->checkbox(['template'=>
                         "<div class=\"checkbox\">\n".Html::a('忘记密码?',['/user/default/find-password'],['class'=>'pull-right']).
                         "{beginLabel}\n{input}\n{labelTitle}\n{endLabel}\n{error}\n{hint}\n</div>"])?>
-                    <?=Html::submitButton('登录',['class'=>'btn btn-block btn-primary'])?>
+                    <?=Html::submitButton($this->title,['class'=>'btn btn-block btn-primary'])?><br />
+                    <div class="form-group other-way text-center">
+                    	<?=Html::a('',['/user/default/auth','authclient'=>'qq'],['class'=>'qq'])?>
+                    	<?=Html::a('',['/user/default/auth','authclient'=>'weibo'],['class'=>'weibo'])?>
+                    	<?=Html::a('',['/user/default/auth','authclient'=>'github'],['class'=>'github'])?>
+				  	</div>
 			     <?php ActiveForm::end();?>
 			</div>
 		</div>
 	</div>
 </div>
-<?php $this->endCache();}?>

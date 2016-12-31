@@ -12,7 +12,7 @@ use yii\bootstrap\Tabs;
         $fields[] = $form->field($model, 'birthday')->textInput();
         $fields[] = $form->field($model, 'location')->textInput();
         $fields[] = $form->field($model, 'signature')->textInput();
-        $fieldGroups[] = ['label' => '<i class="glyphicon glyphicon-th-large"></i>' . Yii::t('user', 'BasicInfo'), 
+        $fieldGroups[] = ['label' => '<i class="glyphicon glyphicon-th-large"></i>' . Yii::t('common', 'BasicInfo'), 
                         'content' =>'<div class="panel panel-primary"><div class="panel-body">'. implode('', $fields).'</div></div>'];
         
         $fields = [];
@@ -29,7 +29,7 @@ use yii\bootstrap\Tabs;
         echo Tabs::widget(['items' => $fieldGroups, 'navType' => 'nav-tabs', 'encodeLabels' => false]);
         ?>
         <div class="form-group">
-            <?= Html::submitButton(Yii::t('user', 'Update'), ['class' => 'btn btn-primary']) ?>
+            <?= Html::submitButton(Yii::t('common', 'Update'), ['class' => 'btn btn-primary']) ?>
         </div>
     <?php ActiveForm::end(); ?>
 </div>

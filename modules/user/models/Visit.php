@@ -1,8 +1,10 @@
 <?php
 namespace modules\user\models;
-use Yii;
 
-class Visit extends \yii\db\ActiveRecord
+use Yii;
+use yii\db\ActiveRecord;
+
+class Visit extends ActiveRecord
 {
     public static function tableName()
     {
@@ -21,29 +23,26 @@ class Visit extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('user', 'ID'),
+            'id' => Yii::t('common', 'ID'),
             'visit_ip' => Yii::t('user', 'Visit Ip'),
             'visit_time' => Yii::t('user', 'Visit Time'),
         ];
     }
     
-    //访问的日访问人数
-    public static function visitNum()
+    public static function ExitVisit()
     {
         $visit_ip = Yii::$app->request->userIP;
-        $visit = Visit::findOne(['visit_ip' => $visit_ip]);
-        $todayZeroTime = mktime(0,0,0,date('m'),date('d'),date('Y'));
-        if ($visit){
-            if ($visit->visit_time<$todayZeroTime){
-                $visit->visit_time = time();
-                $visit->save();
-            }
-        }else{
+        if (!self::findOne(['visit_ip' => $visit_ip])){
             $visit = new Visit();
             $visit->visit_ip = $visit_ip;
             $visit->visit_time = time();
-            $visit->save();
+            return $visit->save();
         }
-        return Visit::find()->where(['>','visit_time',$todayZeroTime])->count();
+        return true;
+    }
+    
+    public static function visitNum()
+    {
+        return Yii::$app->controller->id=='site'?Visit::find()->count():true;
     }
 }

@@ -1,33 +1,40 @@
 <?php
 namespace modules\user\controllers;
+
 use Yii;
 use yii\helpers\Html;
-use app\controllers\FrontController;
-use modules\user\models\LoginForm;
-use modules\user\models\SignupForm;
-use yii\web\Response;
-use modules\user\models\FindPasswordForm;
-use modules\user\models\ResetPasswordForm;
-use modules\user\models\ModifyPasswordForm;
+use modules\user\models\form\LoginForm;
+use modules\user\models\form\SigninForm;
+use modules\user\models\form\FindPasswordForm;
+use modules\user\models\form\ResetPasswordForm;
+use modules\user\models\form\ModifyPasswordForm;
+use modules\user\models\form\SendMessageForm;
+use modules\user\models\form\SignupForm;
 use modules\user\models\UserInfo;
 use modules\user\models\User;
-use modules\user\models\SigninForm;
-use modules\user\models\SendMessageForm;
 use modules\user\models\UserMessage;
 use modules\user\models\UserFans;
+use modules\user\models\VisitCount;
+use modules\user\models\UserNotice;
+use modules\user\models\UserAuth;
+use yii\web\Response;
+use yii\base\InvalidParamException;
+use yii\web\NotFoundHttpException;
+use yii\data\Pagination;
+use yii\web\ServerErrorHttpException;
 
-class DefaultController extends FrontController
+class DefaultController extends \app\controllers\FrontController
 {
     public function behaviors()
     {
         return [
             'access' => [
                 'class' => 'yii\filters\AccessControl',
-                'only' => ['logout','signin','activate-account','find-password','reset-password','modify-password','modify-info','modify-image','send-message',
-                           'focus','nofocus','show-fans','show-fans2','show-focus','show-focus2'],
+                'only' => ['captcha','logout','signin','activate-account','find-password','reset-password','modify-password','modify-info','modify-image','send-message',
+                           'focus','show-fans','show-fans2','show-focus','show-focus2','view-message'],
                 'rules' => [
-                    ['actions' => ['activate-account','find-password','reset-password'],'allow' => true,'roles'=>['?']],
-                    ['actions' => ['logout','modify-password','modify-info','modify-image','signin','send-message','focus','nofocus','show-fans','show-fans2','show-focus','show-focus2'],
+                    ['actions' => ['captcha','activate-account','find-password','reset-password'],'allow' => true,'roles'=>['?']],
+                    ['actions' => ['logout','modify-password','modify-info','modify-image','signin','send-message','focus','show-fans','show-fans2','show-focus','show-focus2','view-message'],
                                     'allow' => true,'roles'=>['@']
                     ],
                 ],
@@ -36,9 +43,112 @@ class DefaultController extends FrontController
                 'class' => 'yii\filters\VerbFilter',
                 'actions' => [
                     'logout' => ['post'],
+                    'focus' => ['post'],
+                    'signin' => ['post'],
+                ],
+            ],
+            [
+                'class' => 'yii\filters\PageCache',
+                //页面缓存，缓存展示七天访客数量的页面，缓存24小时
+                'only' => ['show-visit'],
+                'duration' => 3600*24,
+                //当存储每天的访问人数总数放生改变的时候，缓存失效
+                'dependency' => [
+                    'class' => 'yii\caching\DbDependency',
+                    'sql' => 'SELECT COUNT(*) FROM lulu_user_visit_count',
                 ],
             ],
         ];
+    }
+    
+    public function actions()
+    {
+        return [
+            'captcha' => [
+                'class' => 'yii\captcha\CaptchaAction',
+                'height' => 50,
+                'width' => 80,
+                'maxLength' =>5,
+                'minLength' =>4,
+                'testLimit'=>5,
+                //fixedVerifyCode通常用在自动化测试 方便复制验证码的场景下使用
+                //每次都固定显示一个验证码，方便测试，方便开发
+                'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
+            ],
+            'auth' => [
+                'class' => 'yii\authclient\AuthAction',
+                'successCallback' => [$this, 'onAuthSuccess'],
+            ],
+        ];
+    }
+    
+    public function onAuthSuccess($client)
+    {
+        $attr = $client->getUserAttributes();
+        $auth = UserAuth::find()->where(['source' => $client->id,'source_id' => $attr['id']])->one();
+        //检测是否是已登录用户，如果是未登录用户则检测是否存在绑定记录（存在则直接登录，未存在则要求绑定或者创建账号），如果是已登录用户则绑定账号
+        if (Yii::$app->user->isGuest) {
+            //1、未登录用户
+            if ($auth) { 
+                //1.1未登录用户存在绑定记录直接登录
+                $user = $auth->user;
+                Yii::$app->user->login($user,3600*24*30);
+            } else { 
+                //1.2未登录用户不存在绑定记录跳到绑定或者创建账号页面
+                $attr['source_name'] = $client->id;
+                $session = Yii::$app->session;
+                $session->set('authInfo', $attr);
+                return $this->redirect(['auth-bind-account']);
+            }
+        } else { 
+            //2、已登录用户
+            if (!$auth) {
+                //2.1 绑定
+                $auth = new UserAuth(['user_id' => Yii::$app->user->id,'source' => (string)$client->id,'source_id' => (string)$attr['id']]);
+                if ($auth->save()){
+                    Yii::$app->getSession()->setFlash('success','绑定成功');
+                }else{
+                    Yii::$app->getSession()->setFlash('error','绑定失败');
+                }
+                return $this->redirect('/user/default/modify-bind-account');
+            }else {
+                //2.2 解绑
+                if ($auth->user_id != Yii::$app->user->id){
+                    //如果第三方账号已被绑定一个用户，则不能再绑定其他用户
+                    Yii::$app->getSession()->setFlash('error','该账号已绑定其他用户，请使用其他账号进行绑定');
+                }else{
+                    if ($auth->delete()){
+                        Yii::$app->getSession()->setFlash('success','解绑成功');
+                    }else{
+                        Yii::$app->getSession()->setFlash('error','解绑失败');
+                    }
+                }
+                return $this->redirect('/user/default/modify-bind-account');
+            }
+        }
+    }
+    
+    public function actionAuthBindAccount()
+    {
+        if (! Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+        $session = Yii::$app->session;
+        if( !$session->has('authInfo') ) {
+            return $this->redirect(['login']);
+        }
+        $attr = $session->get('authInfo');
+        $model = new LoginForm();
+        if ($model->load(Yii::$app->getRequest()->post()) && $model->login()) {
+            $auth = new UserAuth(['user_id' => Yii::$app->user->id,'source' => (string)$attr['source_name'],'source_id' => (string)$attr['id']]);
+            if ($auth->save()) {
+                $session->remove('authInfo');
+            } else {
+                throw new ServerErrorHttpException(implode('<br />', $auth->getFirstErrors()));
+            }
+            return $this->goHome();
+        } 
+        return $this->render('authBindAccount', ['model' => $model,'authInfo' => $attr]);
     }
     
     public function actionLogin()
@@ -48,7 +158,7 @@ class DefaultController extends FrontController
         }
         $model = new LoginForm();
         if ($model->load(Yii::$app->getRequest()->post()) && $model->login()) {
-            return $this->goHome();
+            return $this->goBack();
         }
         return $this->render('login', ['model' => $model]);
     }
@@ -70,14 +180,23 @@ class DefaultController extends FrontController
             Yii::$app->getSession()->setFlash('success','注册成功，请检查你的邮箱 '.$model->email.'，请在1小时内完成验证'.Html::a('没收到邮件？',['find-password']));
             return $this->goHome();
         }
-        return $this->renderAjax('signup', ['model' => $model]);
+        return $this->render('signup', ['model' => $model]);
     }
     
     //注册的时候通过点击邮件链接激活账号
     public function actionActivateAccount($token)
     {
         $model = new SignupForm();
-        if($model->removeToken($token)){
+        $user = User::findByPasswordResetToken($token);
+        if($model->removeToken($user)){
+            $session = Yii::$app->session;
+            $attr = $session->get('authInfo');
+            if($attr) {
+                $auth = new UserAuth(['user_id' => $user->id,'source' => $attr['source_name'],'source_id' => $attr['id']]);
+                if ($auth->save()) {
+                    $session->remove('authInfo');
+                }
+            }
             Yii::$app->getSession()->setFlash('success','邮件已经验证，请登录您的帐号');
             return $this->goHome();
         }else{
@@ -126,105 +245,109 @@ class DefaultController extends FrontController
     //修改个人信息
     public function actionModifyInfo()
     {
-        $model = UserInfo::findOne(['user_id' => User::getUser()->id]);
-        if ($model->load(Yii::$app->request->post()) && $model->save()){
+        $info = UserInfo::findOne(['user_id' => Yii::$app->user->id]);
+        if ($info->load(Yii::$app->request->post()) && $info->save()){
             Yii::$app->getSession()->setFlash('success','个人信息修改成功');
             return $this->refresh();
         }
-        return $this->render('modifyInfo',['model'=>$model]);
+        return $this->render('modifyInfo',['info'=>$info]);
     }
     
-    //更换头像
+    public function actionModifyBindAccount()
+    {
+        $user = Yii::$app->user->identity;
+        return $this->render('modifyBindAccount',['user'=>$user]);
+    }
+    
+    //修改个人头像
     public function actionModifyImage()
     {
-        $model = UserInfo::findOne(['user_id' => User::getUser()->id]);
-        if ($model->load(Yii::$app->request->post())){
-            if ($model->saveImage($model)){
+        $image = UserInfo::findOne(['user_id' => Yii::$app->user->id]);
+        if ($image->load(Yii::$app->request->post())){
+            if ($image->saveImage()){
                 Yii::$app->getSession()->setFlash('success','成功更换头像');
             }else {
-                Yii::$app->getSession()->setFlash('error','图片格式必须为jpg/png/jpeg，且大小不能超过2M');
+                Yii::$app->getSession()->setFlash('error','图片格式必须为jpg/png/jpeg/gif，且大小不能超过2M');
             }
             return $this->refresh();
         }
-        return $this->render('modifyImage',['model'=>$model]);
+        return $this->render('modifyImage',['image'=>$image]);
     }
     
-    //展示有多少个用户和前十个用户的用户名
+    //展示用户
     public function actionUsers()
     {
-        $count = User::find()->where(['status' => 10])->count();
-        $user_info = UserInfo::find()->limit(10)->orderBy(['score'=>SORT_DESC])->all();
-        /* $cache = Yii::$app->cache;
-        if($cache->get('user_info') == false){
-            $cacheData = UserInfo::find()->limit(10)->orderBy(['score'=>SORT_DESC])->all();
-            //设置缓存的时间为1个小时
-            $cache->set('user_info', $cacheData,60*60);
+        $username = Yii::$app->request->get('username');
+        if ($username){
+            return $this->redirect(['search-user','username'=>$username]);
         }
-        $user_info = $cache->get('user_info'); */
-        return $this->render('users', ['count' => $count,'user_info' => $user_info]);
+        $res = User::find()->where(['status'=>10])->joinWith('userInfo')->orderBy(['score'=>SORT_DESC])->all();
+        return $this->render('users', ['res' => $res]);
+    }
+    
+    //搜索用户
+    public function actionSearchUser($username=null)
+    {
+        $username = Yii::$app->request->get('username');
+        $res = User::find()->andFilterWhere(['like','username',$username])->all();
+        return $this->render('users',['res'=>$res]);
+    }
+    
+    //在线用户
+    public function actionOnlineUser()
+    {
+        $res = UserInfo::OnlineUser()->select(['user_id','score'])->all();
+        return $this->render('users',['res'=>$res]);
     }
     
     //展示用户的个人信息
     public function actionShow($username)
     {
         $user = User::findOne(['username' => $username]);
-        $user_info = UserInfo::findOne(['user_id' => $user->id]);
-        return $this->render('show',['user'=>$user,'user_info'=>$user_info]);
+        if ($user->exitVisitNotice){
+            UserNotice::updateNotice($user->id,'visit');
+        }else if (Yii::$app->user->id != $user->id){
+            UserNotice::setNotice(Yii::$app->user->id,$user->id,'visit');
+        }
+        return $this->render('show',['user'=>$user]);
     }
     
     //展示用户的个人积分、粉丝数量、关注数量
     public function actionShowScore()
     {
-        $user = User::getUser();
-        $user_info = UserInfo::findOne(['user_id' => User::getUser()->id]);
-        return $this->render('showScore',['user'=>$user,'user_info'=> $user_info]);
+        $user =  Yii::$app->user->identity;
+        return $this->render('showScore',['user'=>$user]);
     }
     
     //展示全部粉丝列表，用在show页面
-    public function actionShowFans($username)
+    public function actionShowFans()
     {
-        //传递$user和$user_info是为了展示show页面
-        $user = User::findOne(['username' => $username]);
-        $user_info = UserInfo::findOne(['user_id' => $user->id]);
-        $user_fans = UserFans::showFans($username);
-        return $this->render('showFans',['user_fans'=> $user_fans,'user'=>$user,'user_info'=>$user_info]);
-    }
-    
-    //展示全部粉丝列表，用在showScore页面，这里必须优化代码，增加代码的重复利用率
-    public function actionShowFans2($username)
-    {
-        //传递$user和$user_info是为了展示show页面
-        $user = User::findOne(['username' => $username]);
-        $user_info = UserInfo::findOne(['user_id' => $user->id]);
-        $user_fans = UserFans::showFans($username);
-        return $this->render('showFans2',['user_fans'=> $user_fans,'user'=>$user,'user_info'=>$user_info]);
+        return $this->render('showFans');
     }
     
     //展示全部关注列表
-    public function actionShowFocus($username)
+    public function actionShowFocus()
     {
-        //传递$user和$user_info是为了展示show页面
-        $user = User::findOne(['username' => $username]);
-        $user_info = UserInfo::findOne(['user_id' => $user->id]);
-        $user_focus = UserFans::showFocus($username);
-        return $this->render('showFocus',['user_focus'=> $user_focus,'user'=>$user,'user_info'=>$user_info]);
+        return $this->render('showFans');
+    }
+    
+    //展示全部粉丝列表，用在showScore页面
+    public function actionShowFans2()
+    {
+        return $this->render('showFans');
     }
     
     //展示全部关注列表
-    public function actionShowFocus2($username)
+    public function actionShowFocus2()
     {
-        //传递$user和$user_info是为了展示show页面
-        $user = User::findOne(['username' => $username]);
-        $user_info = UserInfo::findOne(['user_id' => $user->id]);
-        $user_focus = UserFans::showFocus($username);
-        return $this->render('showFocus2',['user_focus'=> $user_focus,'user'=>$user,'user_info'=>$user_info]);
+        return $this->render('showFans');
     }
     
     //签到
     public function actionSignin()
     {
-        SigninForm::signin();
-        return $this->goHome();
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return $this->signin();
     }
     
     //今日签到会员
@@ -240,42 +363,84 @@ class DefaultController extends FrontController
     {
         $model = new SendMessageForm();
         if ($model->load(Yii::$app->request->post()) && $model->sendMessage()){
-            Yii::$app->getSession()->setFlash('success','私信发送成功');
-            return $this->refresh();
+           Yii::$app->getSession()->setFlash('success','私信发送成功');
+           return $this->refresh();
         }
         return $this->render('sendMessage',['model'=>$model,'username'=>$username]);
     }
     
-    //邮件提醒
-    public function actionNoticeMessage()
+    //私信列表
+    public function actionListMessage()
     {
-        $message = UserMessage::findAll(['to' => User::getUser()->username]);
-        return $this->render('noticeMessage',['message'=>$message]);
+        $username = Yii::$app->user->identity->username;
+        $where = ['to' => $username,'parent_id'=>'0'];
+        $orWhere = ['from' => $username,'parent_id'=>'0'];
+        $count = UserMessage::find()->where($where)->orWhere($orWhere)->count();
+        $pages = new Pagination(['totalCount' =>$count,'pageSize' => Yii::$app->params['pageSize']['many']]);
+        $message = UserMessage::find()->where($where)->orWhere($orWhere)->orderBy(['send_time'=>SORT_DESC])->offset($pages->offset)->limit($pages->limit)->all();
+        return $this->render('listMessage',['message'=>$message,'pages'=>$pages]);
     }
     
-    //已发送邮件
-    public function actionHasSendMessage()
+    //查询和回复私信
+    public function actionViewMessage($id)
     {
-        $message = UserMessage::findAll(['from' => User::getUser()->username]);
-        return $this->render('hasSendMessage',['message'=>$message]);
+        $model = new UserMessage();
+        $message = UserMessage::find()->where(['id'=>$id])->one();
+        //防止用户通过url查看别人的私信
+        if (!$message || Yii::$app->user->identity->username != $message->from && Yii::$app->user->identity->username != $message->to){
+            return $this->goHome();
+        }
+        if ($model->load(Yii::$app->request->post())){
+            $from_user = Yii::$app->user->identity;
+            $from = $from_user->username;
+            $message->from == $from ? $model->to=$message->to: $model->to=$message->from;
+            $model->from = $from;
+            $model->parent_id = $id;
+            $model->send_time = time();
+            if ($model->validate() && $model->save()){
+                UserNotice::setNotice($from_user->id, $model->toUser->id, 'message');
+                return $this->refresh();
+            }
+        }
+        return $this->render('viewMessage',['model'=>$model,'message'=>$message]);
     }
     
-    //关注
-    public function actionFocus($focus_who)
+    //关注和取消关注    
+    public function actionFocus()
     {
-        $user_fans = new UserFans();
-        if($user_fans->focus($focus_who)){
-            return $this->redirect(['show','username'=>$focus_who]);
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $focus_who = Yii::$app->request->get('username');
+        if (empty($focus_who)) {
+            throw new InvalidParamException('参数不合法');
+        }
+        if (empty(User::findOne(['username'=>$focus_who]))) {
+            throw new NotFoundHttpException('用户不存在');
+        }
+        $from = Yii::$app->user->identity->username;
+        $user_fans = UserFans::find()->where(['from' => $from,'to' => $focus_who])->one();
+        if (empty($user_fans)) {
+            $user_fans = new UserFans();
+            $user_fans->from = $from;
+            $user_fans->to = $focus_who;
+            $user_fans->focus_time = time();
+            $user_fans->save();
+            UserNotice::setNotice($user_fans->fromUser->id, $user_fans->toUser->id, 'focus');
+            return ['action' => 'focus'];
+        } else {
+            $user_fans->delete();
+            UserNotice::deleteNotice('focus', $user_fans->toUser->id);
+            return ['action' => 'no-focus'];
         }
     }
     
-    //取消关注
-    public function actionNoFocus($nofocus_who)
+    //展示近七日网站的访问量
+    public function actionShowVisit()
     {
-        $user_fans = UserFans::exitFocus($nofocus_who);
-        if($user_fans->nofocus($user_fans)){
-            return $this->redirect(['show','username'=>$nofocus_who]);
-        }
+        $sevenDaysZeroTime = date('Y-m-d',mktime(0,0,0,date('m'),date('d')-7,date('Y')));
+        $visit = VisitCount::find()->where(['>=','created_time',$sevenDaysZeroTime])->asArray()->all();
+        $time = array_column($visit, 'created_time');
+        $nums = array_column($visit, 'nums');
+        return $this->render('showVisit',['time'=>$time,'nums'=>$nums]);
     }
     
     protected function performAjaxValidation($model)
@@ -290,4 +455,21 @@ class DefaultController extends FrontController
         }
     }
     
+    protected  function signin()
+    {
+        $userInfo = UserInfo::findOne(['user_id' => Yii::$app->user->id]);
+        $yesterdayZeroTime = mktime(0,0,0,date('m')-1,date('d'),date('Y'));
+        $todayZeroTime = mktime(0,0,0,date('m'),date('d'),date('Y'));
+        //如果昨天签到过，签到次数+1
+        if ($userInfo->signin_time>$yesterdayZeroTime && $userInfo->signin_time<$todayZeroTime){
+            $userInfo->signin_day++;
+        }else{
+            //如果昨天没有签到，或者从没有签到，连续签到次数=1
+            $userInfo->signin_day=1;
+        }
+        $userInfo->signin_time = time();
+        $userInfo->score ++;
+        $userInfo->save();
+        return ['days'=>$userInfo->signin_day];
+    }
 }

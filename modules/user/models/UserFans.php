@@ -1,37 +1,20 @@
 <?php
 namespace modules\user\models;
 
-class UserFans extends \yii\db\ActiveRecord
+use modules\user\models\User;
+use yii\db\ActiveRecord;
+
+class UserFans extends ActiveRecord
 {
     public static function exitFocus($focus_who)
     {
-        $from = User::getUser()->username;
+        $from = \Yii::$app->user->identity->username;
         return UserFans::findOne(['from' => $from,'to' => $focus_who]);
-    }
-    
-    public static function fansNums($username)
-    {
-        return UserFans::find()->where(['to'=>$username])->count();
-    }
-    
-    public static function focusNums($username)
-    {
-        return UserFans::find()->where(['from'=>$username])->count();
-    }
-    
-    public static function showFans($username)
-    {
-        return UserFans::find()->where(['to'=>$username])->all();
-    }
-    
-    public static function showFocus($username)
-    {
-        return UserFans::find()->where(['from'=>$username])->all();
     }
     
     public function focus($focus_who)
     {
-        $from = User::getUser()->username;
+        $from = \Yii::$app->user->identity->username;
         $user_fans = new UserFans();
         if(!$this->exitFocus($focus_who)){
             $user_fans->from = $from;
@@ -42,8 +25,13 @@ class UserFans extends \yii\db\ActiveRecord
         return null;
     }
     
-    public function nofocus($focus_fans)
+    public function getFromUser()
     {
-        return UserFans::delete(['from'=>$focus_fans->from,'to'=>$focus_fans->to]);
+        return User::find()->where(['username'=>$this->from])->one();
+    }
+    
+    public function getToUser()
+    {
+        return User::find()->where(['username'=>$this->to])->one();
     }
 }

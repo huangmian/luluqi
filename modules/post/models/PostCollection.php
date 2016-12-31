@@ -27,13 +27,8 @@ class PostCollection extends \yii\db\ActiveRecord
         ];
     }
     
-    public static function exitCollect($id)
+    public function getPost()
     {
-        return PostCollection::findOne(['user_id'=> \Yii::$app->user->id,'post_id'=>$id]);
-    }
-    
-    public function nocollect($collect)
-    {
-        return PostCollection::delete(['user_id'=>$collect->id,'post_id'=>$collect->post_id]);
+        return Post::findOne(['id'=>$this->post_id]);
     }
 }

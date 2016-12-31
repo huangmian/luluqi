@@ -1,6 +1,6 @@
 <?php 
 use yii\helpers\Html;
-use modules\post\models\post;
+use modules\post\models\Post;
 use yii\bootstrap\ActiveForm;
 ?>
 <div class='row'>
@@ -8,10 +8,18 @@ use yii\bootstrap\ActiveForm;
 		<div class='panel panel-default'>
             <div class='panel-body'>
             	<?php $form = ActiveForm::begin(['id'=>'UpdatePostForm']);?>
-            		<?= $form->field($model,'title')->textInput()->label(Post::getPostType($model->type).Yii::t('post', 'Title'));?>
-            		<?= $form->field($model, 'content')->widget(\yii\redactor\widgets\Redactor::className(),['clientOptions'=>['lang'=>'zh_cn']])?>
+            		<?= $form->field($model,'title')->textInput()->label(Yii::t('post', 'Post').Yii::t('post', 'Title'));?>
+            		<?= $form->field($model,'type_id')->dropDownList(Post::getFilterType());?>
+            		<?= $form->field($model,'tag_id')->dropDownList(Post::getFilterTag());?>
+            		<?= $form->field($model,'is_reprint')->dropDownList(Yii::$app->params['luluyiiGlobal']['is_reprint']);?>
+            		<?= $form->field($model, 'content')->widget(lulubin\redactor\widgets\Redactor::className(), [
+                        'clientOptions' => [
+                            'lang'=>'zh_cn',
+                            'plugins' => ['fontcolor','fontsize','fontfamily','fullscreen','imagemanager','table','textexpander']
+                        ]
+                    ])?>
             		<div class="form-group">
-        				<?= Html::submitButton($model->isNewRecord ? Yii::t('post', 'Create') : Yii::t('post', 'Update'), ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
+        				<?= Html::submitButton($model->isNewRecord ? Yii::t('common', 'Create') : Yii::t('common', 'Update'), ['class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
     				</div>
             	<?php ActiveForm::end();?>	
             </div>

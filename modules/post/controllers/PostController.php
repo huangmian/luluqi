@@ -3,9 +3,9 @@ namespace modules\post\controllers;
 
 use Yii;
 use modules\post\models\Post;
-use modules\post\models\PostSearch;
-use app\controllers\BackController;
+use modules\post\models\search\PostSearch;
 use yii\web\NotFoundHttpException;
+use app\controllers\BackController;
 
 class PostController extends BackController
 {
@@ -24,6 +24,7 @@ class PostController extends BackController
     public function actionCreate()
     {
         $model = new Post();
+        $model->user_id = Yii::$app->user->id;
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         } else {

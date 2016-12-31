@@ -1,7 +1,8 @@
 <?php
+use yii\helpers\Html;
 use kartik\grid\GridView;
-use modules\user\models\User;
-$this->title = Yii::t('user', 'Visit Manager');
+use lulubin\ip2location\Ip2Location;
+$this->title = Yii::t('user', 'Visit').Yii::t('common', 'Manager');
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="visit-index">
@@ -9,19 +10,27 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
             'id',
-            'visit_ip',
-            ['attribute' => 'visit_time',
-            'value' => function ($model) {
-            return User::getCreatdTime($model->visit_time);
-            }],
+            [
+                'attribute' => 'visit_ip',
+                'value' => function ($model) {
+                    $ipLocation = new Ip2Location();
+                    $locationModel = $ipLocation->getLocation($model->visit_ip);
+                    return $model->visit_ip.'　'.$locationModel->country.$locationModel->area;
+                }
+            ],
+            [
+                'attribute' => 'visit_time',
+                'value' => function ($model){return date('Y-m-d H:i:s',$model->visit_time);}
+            ],
+            ['class' => 'yii\grid\ActionColumn','header' => "操作"],
         ],
         'export' => false,
+        'pjax' => true,
         'panel' => [
-            'heading' => '<h3 class="panel-title"><i class="glyphicon glyphicon-user"></i>'.Yii::t('user', 'Visit Manager').'</h3>',
+            'heading' => '<h3 class="panel-title"><i class="glyphicon glyphicon-user"></i>'.$this->title.'</h3>',
             'type' => 'success',
-            'footer' => false,
+            'before' => Html::a('<i class="glyphicon glyphicon-plus"></i>' .Yii::t('common', 'Create'), ['create'], ['class' => 'btn btn-success']),
             'after' => false
         ],
     ]); ?>

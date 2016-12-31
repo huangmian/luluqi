@@ -1,33 +1,29 @@
 <?php
 namespace app\assets;
+
 use yii\web\AssetBundle;
 
-/**
- * @author Qiang Xue <qiang.xue@gmail.com>
- * @since 2.0
- */
 class AppAsset extends AssetBundle
 {
-    public $basePath = '@webroot';
     public $baseUrl = '@web';
-    //全局CSS
+    public $basePath = '@webroot';
+    public $jsOptions = ['position'=>\yii\web\View::POS_END];
+    public $depends = ['yii\web\YiiAsset','yii\bootstrap\BootstrapAsset'];
     public $css = [
         'css/site.css',
         'css/media.css',
     ];
     public $js = [
+        'js/site.js',
     ];
-    //依赖关系
-    public $depends = [
-        'yii\web\YiiAsset',
-        'yii\bootstrap\BootstrapAsset',
-    ];
-    //定义按需加载JS方法，注意加载顺序在最后
-    public static function addScript($view, $jsfile) {
+    
+    public static function addScript($view, $jsfile)
+    {
         $view->registerJsFile($jsfile, [AppAsset::className(), "depends" => "app\assets\AppAsset"]);
     }
-    //定义按需加载css方法，注意加载顺序在最后
-    public static function addCss($view, $cssfile) {
+    
+    public static function addCss($view, $cssfile)
+    {
         $view->registerCssFile($cssfile, [AppAsset::className(), "depends" => "app\assets\AppAsset"]);
     }
 }
