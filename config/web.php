@@ -3,6 +3,10 @@ $params = array_merge(
     require(__DIR__ . '/params.php'),
     require(__DIR__ . '/params-local.php')
 );
+$db = array_merge(
+    require(__DIR__ . '/db.php'),
+    require(__DIR__ . '/db-local.php')
+    );
 $config = [
     'language' => 'zh-CN',
     'timeZone' => 'PRC',
@@ -49,7 +53,6 @@ $config = [
                 ],
             ],
         ],
-        'db' => require(__DIR__ . '/db.php'),
         'view' => [
             'theme' => [
                 'pathMap' => [
@@ -105,6 +108,7 @@ $config = [
             'showScriptName' => false,
             'rules' => require(__DIR__.'/rules.php'),
         ],
+        'db' => $db,
     ],
     'params' => $params,
     'modules' => require(__DIR__.'/modules.php'),
