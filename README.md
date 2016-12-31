@@ -78,6 +78,7 @@ server {
 打开 hosts 文件，添加一下代码：
 
 127.0.0.1 www.luluqi.com
+
 访问 www.luluqi.com
 
 （5）、注意事项
