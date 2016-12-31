@@ -76,8 +76,9 @@ server {
 （4）、配置 hosts 文件
 
 打开 hosts 文件，添加一下代码：
-
+```
 127.0.0.1 www.luluqi.com
+```
 
 访问 www.luluqi.com
 
