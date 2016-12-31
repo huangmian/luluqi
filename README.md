@@ -3,7 +3,7 @@
 
 ### 安装 ###
 
-1、网站演示地址：luluqi
+1、网站演示地址：[luluqi](https://luluqi.cn)
 
 2、项目简介：
 
